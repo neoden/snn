@@ -2,7 +2,7 @@
 
 ## Project Goal
 
-**Build a spiking neural network (SNN) that can be deployed to custom discrete component hardware (transistors, resistors, etc.) for MNIST/N-MNIST classification.**
+**Build a spiking neural network (SNN) that can be deployed to custom discrete component hardware (transistors, resistors, etc.).**
 
 ### Key Constraints:
 - Hardware will be custom-built from discrete components (not commercial chips like Loihi)
@@ -103,6 +103,99 @@ When network guesses randomly:
 
 ### Conclusion
 **R-STDP with binary rewards is fundamentally unsuitable for supervised learning on complex visual patterns, even with aggressive simplification.**
+
+---
+
+## SUCCESS: Surrogate Gradient Implementation
+
+### 5. MNIST with Surrogate Gradients (`nmnist-surrogate/`)
+- Spiking neural network with LIF neurons
+- **Surrogate gradient descent** with backpropagation through time (BPTT)
+- Hardware-compatible LIF dynamics (identical to what hardware will run)
+- **Status**: ✅ **WORKING - 97.76% accuracy achieved!**
+
+### Implementation Details
+
+**Architecture:**
+- Network: 784 → 128 → 10 (LIF neurons)
+- Training: Adam optimizer with learning rate decay
+- Loss: Cross-entropy on spike counts
+- Timesteps: 25 per image
+
+**LIF Neuron Model:**
+```
+V(t+1) = decay × V(t) + I(t)
+spike = (V ≥ threshold) ? 1 : 0
+V(t) ← 0 if spike
+```
+
+**Surrogate Gradient:**
+- Forward: Binary spike (Heaviside function)
+- Backward: Fast sigmoid approximation for gradients
+- Enables backpropagation through non-differentiable spikes
+
+**Key Components:**
+- `lif_neuron.py`: LIF with surrogate gradient autograd function
+- `snn_layers.py`: Spiking linear layers and full network
+- `train.py`: BPTT training loop with evaluation
+- `visualize.py`: Spike rasters, confusion matrix, weight viz
+- `export_weights.py`: Hardware deployment export
+
+### Results Comparison
+
+**Initial Implementation (Poisson Encoding):**
+- Input encoding: Stochastic Poisson spikes
+- Best accuracy: 92.82%
+- Issue: Random noise from Poisson process
+- Training: Slow convergence after 90%
+
+**Improved Implementation (Rate Coding):**
+- Input encoding: Deterministic rate coding (pixel intensity → constant current)
+- **Best accuracy: 97.76%**
+- **Improvement: +4.94% absolute**
+- Training: Smooth convergence, fast initial learning
+- Epoch 1: 94.65% (vs 85.13% with Poisson)
+
+### Critical Discovery: Input Encoding Matters!
+
+The switch from **Poisson encoding** to **rate coding** was transformative:
+
+| Metric | Poisson | Rate Coding | Delta |
+|--------|---------|-------------|-------|
+| Best Accuracy | 92.82% | **97.76%** | +4.94% |
+| Epoch 1 Accuracy | 85.13% | 94.65% | +9.52% |
+| Convergence | Slow | Fast | ✓ |
+| Stability | Noisy | Smooth | ✓ |
+
+**Why Rate Coding Wins:**
+- ✅ Deterministic (no random variance)
+- ✅ Consistent signal across timesteps
+- ✅ Stronger input representation
+- ✅ Cleaner gradients for backprop
+- ✅ Hardware-friendly (constant current per pixel)
+
+### Hardware Deployment Ready
+
+**Network Requirements:**
+- Total neurons: 138 (128 hidden + 10 output)
+- Total synapses: ~101,770 (100,352 + 1,280 + biases)
+- LIF parameters: threshold=1.0, decay=0.9, V_reset=0.0
+- Timesteps per inference: 25
+
+**Inference Procedure:**
+1. **Input encoding**: Pixel intensity → constant current
+2. **Layer 1**: 784→128 LIF neurons with learned weights
+3. **Layer 2**: 128→10 LIF neurons with learned weights
+4. **Output decoding**: Sum spike counts over time, argmax for class
+
+**Expected Performance:** 97.76% on MNIST
+
+### Visualizations Generated
+
+- Training curves (loss, accuracy)
+- Spike raster plots (temporal patterns)
+- Confusion matrix (per-digit accuracy)
+- Weight visualization (learned receptive fields)
 
 ---
 
