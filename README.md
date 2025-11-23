@@ -41,6 +41,11 @@
 - Poisson spike encoding for MNIST images
 - **Status**: ❌ **Does NOT work** (critical finding!)
 
+### 5. MNIST with Surrogate Gradients (`nmnist-surrogate/`)
+- Spiking neural network with LIF neurons
+- **Surrogate gradient descent** with backpropagation through time (BPTT)
+- Hardware-compatible LIF dynamics (identical to what hardware will run)
+- **Status**: ✅ **WORKING - 97.76% accuracy achieved!**
 ---
 
 ## Critical Findings: Why R-STDP Failed
@@ -107,12 +112,6 @@ When network guesses randomly:
 ---
 
 ## SUCCESS: Surrogate Gradient Implementation
-
-### 5. MNIST with Surrogate Gradients (`nmnist-surrogate/`)
-- Spiking neural network with LIF neurons
-- **Surrogate gradient descent** with backpropagation through time (BPTT)
-- Hardware-compatible LIF dynamics (identical to what hardware will run)
-- **Status**: ✅ **WORKING - 97.76% accuracy achieved!**
 
 ### Implementation Details
 
@@ -282,20 +281,6 @@ def surrogate_gradient(V, threshold, sharpness=10.0):
 
 ---
 
-## Current Codebase Structure
-
-```
-global_reward/
-├── iris-nn/              # Backprop on Iris (working)
-├── iris-pg/              # REINFORCE on Iris (working)
-├── mnist-nn/             # Backprop on MNIST (working)
-└── nmnist-stdp/          # R-STDP attempts (educational failure)
-    ├── spiking_network.py    # LIF + STDP implementation
-    ├── data_loader.py        # MNIST → spike train conversion
-    ├── main.py              # Full MNIST training (failed)
-    └── simple_main.py       # Binary MNIST training (failed)
-```
-
 ### Key Reusable Components
 
 **From `nmnist-stdp/`:**
@@ -307,24 +292,6 @@ global_reward/
 - Replace STDP learning with surrogate gradient backprop
 - Keep LIF neuron dynamics identical (hardware-compatible)
 - Add gradient computation through time
-
----
-
-## Next Session TODO
-
-1. **Create new directory**: `nmnist-surrogate/` or similar
-2. **Implement surrogate gradient SNN trainer**:
-   - LIF neuron with surrogate gradient
-   - Backpropagation through time (BPTT)
-   - Cross-entropy loss on output spike counts
-3. **Reuse data loading** from `mnist-nn/` and `nmnist-stdp/`
-4. **Train and validate** on MNIST
-5. **Export weights** in hardware-ready format
-6. **Document hardware requirements**:
-   - Weight matrices
-   - LIF parameters
-   - Spike encoding/decoding
-   - Expected accuracy
 
 ---
 
