@@ -143,14 +143,13 @@ class SpikingNetwork(nn.Module):
 
         # Temporal simulation (BPTT)
         for t in range(self.num_timesteps):
-            # Poisson spike encoding: P(spike) = pixel_intensity / num_timesteps
-            # This creates temporal spike trains from static images
-            spike_prob = input_data / self.num_timesteps
-            input_spikes = torch.rand_like(input_data) < spike_prob
-            input_spikes = input_spikes.float()
+            # Rate coding: Use pixel intensity directly as constant current
+            # This is deterministic and provides consistent input across timesteps
+            # Scale by num_timesteps to maintain similar total input
+            input_current = input_data
 
             # Layer 1: Input → Hidden
-            hidden_spikes = self.layer1(input_spikes)
+            hidden_spikes = self.layer1(input_current)
             hidden_spikes_history.append(hidden_spikes)
 
             # Layer 2: Hidden → Output
