@@ -35,7 +35,7 @@
 - **Status**: ✅ Working
 - **Learning**: Achieves good accuracy on MNIST
 
-### 4. N-MNIST with R-STDP (`nmnist-stdp/`)
+### 4. MNIST with R-STDP (`nmnist-stdp/`)
 - Spiking neural network with Leaky Integrate-and-Fire (LIF) neurons
 - Reward-modulated STDP (R-STDP) learning
 - Poisson spike encoding for MNIST images
